@@ -1,0 +1,43 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+# Least-privilege default; the release job elevates only what it needs.
+permissions:
+  contents: read
+
+jobs:
+  release:
+    name: build and publish release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # to create the GitHub Release and upload assets
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0 # full history/tags so `git describe` resolves the pushed tag
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Install garble
+        run: go install mvdan.cc/garble@latest
+
+      - name: Build release artifacts (runs test + lint + audit gates first)
+        run: make release
+
+      - name: Publish GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ github.ref_name }}" dist/* \
+            --title "${{ github.ref_name }}" \
+            --generate-notes
