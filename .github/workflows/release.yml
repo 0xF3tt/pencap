@@ -28,8 +28,18 @@ jobs:
           go-version: stable
           cache: true
 
-      - name: Install garble
-        run: go install mvdan.cc/garble@latest
+      - name: Install lint/audit/build tooling
+        run: |
+          go install mvdan.cc/garble@latest
+          go install honnef.co/go/tools/cmd/staticcheck@latest
+          go install github.com/securego/gosec/v2/cmd/gosec@latest
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+
+      - name: Install golangci-lint
+        uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
+        with:
+          version: latest
+          install-only: true
 
       - name: Build release artifacts (runs test + lint + audit gates first)
         run: make release
