@@ -1,0 +1,15 @@
+version: 2
+updates:
+  # Keep SHA-pinned CI actions current — pinned SHAs never self-update, so
+  # this is the mechanism that actually keeps them patched.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+
+  # No dependencies today (stdlib only), but this keeps the tree covered
+  # the moment one is added.
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "weekly"

@@ -1,0 +1,9 @@
+/pencap
+/dist/
+/build/
+
+.DS_Store
+
+# scan output — embeds local machine paths/usernames, not for publication
+/Reports/
+.claude/
