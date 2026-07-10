@@ -20,14 +20,22 @@ func TestFindRoot(t *testing.T) {
 	cwd, _ := os.Getwd()
 	defer func() { _ = os.Chdir(cwd) }()
 
+	// Ask the OS for its own canonical form of eng by chdir-ing there and
+	// reading it back, rather than transforming the constructed string
+	// ourselves — sidesteps both macOS's /tmp -> /private/tmp symlink and
+	// Windows's short (8.3) vs long filename aliasing.
+	if err := os.Chdir(eng); err != nil {
+		t.Fatal(err)
+	}
+	wantRoot, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	if err := os.Chdir(sub); err != nil {
 		t.Fatal(err)
 	}
 	root, err := findRoot()
-	if err != nil {
-		t.Fatal(err)
-	}
-	wantRoot, err := filepath.EvalSymlinks(eng)
 	if err != nil {
 		t.Fatal(err)
 	}
