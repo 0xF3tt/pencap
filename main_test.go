@@ -46,6 +46,9 @@ func TestFindRoot(t *testing.T) {
 
 func TestFindRootMissing(t *testing.T) {
 	tmp := t.TempDir()
+	// Point config at a nonexistent file so the machine's real global path
+	// (if any) can't satisfy the lookup.
+	t.Setenv("PENCAP_CONFIG", filepath.Join(tmp, "no-such-config"))
 	cwd, _ := os.Getwd()
 	defer func() { _ = os.Chdir(cwd) }()
 	if err := os.Chdir(tmp); err != nil {
@@ -53,6 +56,41 @@ func TestFindRootMissing(t *testing.T) {
 	}
 	if _, err := findRoot(); err == nil {
 		t.Fatal("expected error when no scope.yaml present")
+	}
+}
+
+func TestFindRootGlobalFallback(t *testing.T) {
+	tmp := t.TempDir()
+	eng := filepath.Join(tmp, "acme-2026")
+	if err := os.MkdirAll(eng, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(eng, markerFile), []byte("engagement: acme-2026\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Save the global path, then resolve from a directory that is NOT inside
+	// any engagement — the fallback should kick in.
+	t.Setenv("PENCAP_CONFIG", filepath.Join(tmp, "config"))
+	if err := saveConfigRoot(eng); err != nil {
+		t.Fatal(err)
+	}
+
+	outside := filepath.Join(tmp, "elsewhere")
+	if err := os.MkdirAll(outside, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	cwd, _ := os.Getwd()
+	defer func() { _ = os.Chdir(cwd) }()
+	if err := os.Chdir(outside); err != nil {
+		t.Fatal(err)
+	}
+	root, err := findRoot()
+	if err != nil {
+		t.Fatalf("expected global fallback to resolve, got %v", err)
+	}
+	if filepath.Base(root) != "acme-2026" {
+		t.Fatalf("got %s, want engagement acme-2026", root)
 	}
 }
 
