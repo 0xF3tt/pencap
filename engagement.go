@@ -62,7 +62,22 @@ contacts:
 	return nil
 }
 
+// findRoot resolves the active engagement: the nearest enclosing directory with
+// a scope.yaml wins (local context first), falling back to the globally
+// configured path (`pencap path`) when you're outside any engagement tree.
 func findRoot() (string, error) {
+	if dir, err := findRootFromCwd(); err == nil {
+		return dir, nil
+	}
+	if cfg, err := loadConfigRoot(); err == nil && cfg != "" {
+		if _, err := os.Stat(filepath.Join(cfg, markerFile)); err == nil {
+			return cfg, nil
+		}
+	}
+	return "", fmt.Errorf("not inside an engagement (no %s found) and no valid global path set; run `pencap init`, then `pencap path <dir>`", markerFile)
+}
+
+func findRootFromCwd() (string, error) {
 	dir, err := os.Getwd()
 	if err != nil {
 		return "", err
@@ -73,7 +88,7 @@ func findRoot() (string, error) {
 		}
 		parent := filepath.Dir(dir)
 		if parent == dir {
-			return "", fmt.Errorf("not inside an engagement (no %s found); run `pencap init` first", markerFile)
+			return "", fmt.Errorf("not inside an engagement (no %s found)", markerFile)
 		}
 		dir = parent
 	}

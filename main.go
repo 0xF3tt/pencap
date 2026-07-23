@@ -25,6 +25,10 @@ func main() {
 		err = cmdFinding(os.Args[2:])
 	case "export":
 		err = cmdExport(os.Args[2:])
+	case "path":
+		err = cmdPath(os.Args[2:])
+	case "info":
+		err = cmdInfo()
 	case "version", "-v", "--version":
 		fmt.Println("pencap", version)
 	case "help", "-h", "--help":
@@ -50,5 +54,7 @@ func usage() {
   pencap finding add <title>				[--severity crit|high|med|low|info]
   pencap finding link <id> <evidence-path>
   pencap finding list
-  pencap export								write findings + evidence to report/draft/report.md`)
+  pencap export								write findings + evidence to report/draft/report.md
+  pencap path [<dir>]						show or set the global engagement path (used when outside any engagement)
+  pencap info								show the active engagement and how it was resolved`)
 }
